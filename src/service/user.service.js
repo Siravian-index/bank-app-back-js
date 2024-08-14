@@ -1,6 +1,8 @@
 import db from "../db/Instance.js"
 import { GenericError } from "../error/GenericError.js"
 import { comparePasswords, hashPassword } from "../utils/hash.js"
+import { signToken } from "../utils/jwt.js"
+
 
 
 // data = createUserSchema
@@ -63,13 +65,15 @@ export async function loginUserService(data) {
   if (!found) {
     throw new GenericError({ status: 400, message: "User is not registered", })
   }
+  const { password, ...user } = found
 
-  const match = await comparePasswords(found.password, data.password)
+  const match = await comparePasswords(password, data.password)
 
   if (!match) {
     throw new GenericError({ status: 400, message: "Passwords do not match", })
   }
 
-  // create token and return data
-  return found
+  const token = signToken(user)
+
+  return { user, token }
 }
