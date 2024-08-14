@@ -16,9 +16,6 @@ export const createUserSchema = z.object({
         rol: z.string({
             required_error: "Rol is required"
         }),
-        active: z.boolean({
-            required_error: "Active is required"
-        }),
     })
 })
 

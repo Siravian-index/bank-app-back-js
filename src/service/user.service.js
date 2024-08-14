@@ -1,6 +1,6 @@
 import db from "../db/Instance.js"
 import { GenericError } from "../error/GenericError.js"
-import { hashPassword } from "../utils/hash.js"
+import { comparePasswords, hashPassword } from "../utils/hash.js"
 
 
 // data = createUserSchema
@@ -27,7 +27,7 @@ export async function createUserService(data) {
   if (found) {
     throw new GenericError({ status: 400, message: "User already register", })
   }
-  
+
   const hashedPassword = await hashPassword(data.password)
 
   const { password, ...user } = await db.client.create({
@@ -46,4 +46,30 @@ export async function createUserService(data) {
 
   return user
 
+}
+
+
+// {
+//   email: 'test1@gmail.com',
+//   password: '21312321',
+// }
+export async function loginUserService(data) {
+  const found = await db.client.findFirst({
+    where: {
+      email: data.email,
+    }
+  })
+
+  if (!found) {
+    throw new GenericError({ status: 400, message: "User is not registered", })
+  }
+
+  const match = await comparePasswords(found.password, data.password)
+
+  if (!match) {
+    throw new GenericError({ status: 400, message: "Passwords do not match", })
+  }
+
+  // create token and return data
+  return found
 }
