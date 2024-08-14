@@ -1,5 +1,6 @@
 import db from "../db/Instance.js"
 import { GenericError } from "../error/GenericError.js"
+import { hashPassword } from "../utils/hash.js"
 
 
 // data = createUserSchema
@@ -26,14 +27,14 @@ export async function createUserService(data) {
   if (found) {
     throw new GenericError({ status: 400, message: "User already register", })
   }
-  // take password && hash it
-
+  
+  const hashedPassword = await hashPassword(data.password)
 
   const { password, ...user } = await db.client.create({
     data: {
       email: data.email,
       cc: data.cc,
-      password: data.password,
+      password: hashedPassword,
       rol: data.rol,
       account: {
         create: {
