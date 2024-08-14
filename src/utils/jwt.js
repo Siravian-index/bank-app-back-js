@@ -10,7 +10,21 @@ export function signToken(payload) {
 }
 
 export function verifyToken(token) {
-  return jwt.verify(token, process.env.TOKEN_PRIVATE_KEY)
+  try {
+    const decoded = jwt.verify(token, process.env.TOKEN_PUBLIC_KEY)
+    return {
+      decoded,
+      valid: true,
+      expired: false,
+    }
+  } catch (e) {
+    console.error(e.message)
+    return {
+      decoded: null,
+      valid: false,
+      expired: e.message === "jwt expired",
+    }
+  }
 }
 
 export function decodeToken(token) {

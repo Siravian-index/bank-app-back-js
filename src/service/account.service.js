@@ -15,6 +15,5 @@ export async function checkAccountService(clientId) {
     throw new GenericError({ status: 400, message: `Account not found for client ${clientId}`, })
   }
 
-  console.log(account)
   return account
 }
