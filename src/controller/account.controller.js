@@ -1,6 +1,6 @@
 import { CustomError } from "../error/CustomError.js"
 import { InternalServerError } from "../error/InternalServerError.js"
-import { checkAccountService } from "../service/account.service.js"
+import { checkAccountService, depositAccountService } from "../service/account.service.js"
 
 
 export async function checkAccountHandler(req, res) {
@@ -19,7 +19,8 @@ export async function checkAccountHandler(req, res) {
 
 export async function depositAccountHandler(req, res) {
   try {
-    const account = await depositAccountService(req.query.clientId)
+    const amount = req.body.amount
+    const account = await depositAccountService(res.locals.user.id, amount)
     res.json({ data: account })
   } catch (error) {
     if (error instanceof CustomError) {
