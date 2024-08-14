@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@prisma/client": "5.18.0",
+    "@prisma/client": "^5.18.0",
     "nodemon": "^3.1.4"
   },
   "devDependencies": {
