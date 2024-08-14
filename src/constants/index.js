@@ -1,0 +1,12 @@
+
+
+export const CLIENT_ROLES = {
+  STANDARD: "STANDARD",
+  ADMIN: "ADMIN",
+}
+
+export const TRANSACTION_TYPES = {
+  DEPOSIT: "DEPOSIT",
+  WITHDRAW: "WITHDRAW",
+  TRANSFER: "TRANSFER",
+}

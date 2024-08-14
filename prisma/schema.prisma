@@ -13,8 +13,9 @@ model Transaction {
   type      String
   money     Int
   createdAt DateTime @default(now())
-  account   Account  @relation(fields: [accountId], references: [id])
-  accountId String
+  account   Account  @relation(fields: [ownerAccountId], references: [id])
+  ownerAccountId String
+  recipientAccountId String?
 }
 
 model Account {
@@ -33,6 +34,6 @@ model Client {
   cc       String   @unique
   password String
   rol      String
-  active   Boolean
+  active   Boolean @default(true)
   account  Account?
 }
