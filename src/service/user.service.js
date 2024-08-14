@@ -1,4 +1,5 @@
 import db from "../db/Instance.js"
+import { GenericError } from "../error/GenericError.js"
 
 
 // data = createUserSchema
@@ -11,19 +12,37 @@ import db from "../db/Instance.js"
 //   active: true
 // }
 export async function createUserService(data) {
-  // validate user doesn't exist first
-  console.log(data)
-  "SELECT * FROM user WHERE user.email = data.email OR user.cc = data.cc"
-  const found = await db.user.findFirst({where: {
-    email: data.email,
-    OR: {
-      cc: data.cc,
+  const found = await db.client.findFirst({
+    where: {
+      OR: [
+        {
+          email: data.email,
+        },
+        { cc: data.cc },
+      ],
     }
-  }})
-  console.log(found)
-  return db.user.findMany()
+  })
+
+  if (found) {
+    throw new GenericError({ status: 400, message: "User already register", })
+  }
   // take password && hash it
-  // save it to the db
-  // return new user
-  return data
+
+
+  const { password, ...user } = await db.client.create({
+    data: {
+      email: data.email,
+      cc: data.cc,
+      password: data.password,
+      rol: data.rol,
+      account: {
+        create: {
+          balance: 10_000
+        }
+      }
+    }
+  })
+
+  return user
+
 }
