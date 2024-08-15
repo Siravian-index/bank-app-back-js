@@ -114,3 +114,90 @@ export async function withdrawAccountService(clientId, amount) {
 
   return updatedAccount
 }
+
+
+export async function transferAccountService(clientId, recipientAccountId, amount) {
+  const client = await db.client.findFirst({
+    where: {
+      id: clientId
+    }
+  })
+
+  if (!client) {
+    throw new GenericError({ status: 400, message: `Client ${clientId} not found`, })
+  }
+
+  if (!client.active) {
+    throw new GenericError({ status: 400, message: `Client ${clientId} is not active`, })
+  }
+
+  const account = await db.account.findFirst({
+    where: {
+      clientId
+    }
+  })
+
+  if (!account) {
+    throw new GenericError({ status: 400, message: `Account not found for client ${clientId}`, })
+  }
+
+  const hasResources = account.balance >= amount
+  if (!hasResources) {
+    throw new GenericError({ status: 400, message: `Account does not have enough money (${account.balance}) to transfer this amount (${amount})`, })
+  }
+
+
+  const recipientAccount = await db.account.findFirst({
+    where: {
+      id: recipientAccountId
+    },
+    select: {
+      id: true,
+      balance: true,
+      client: {
+        select: {
+          id: true,
+          active: true,
+        }
+      },
+    }
+  })
+
+
+  if (!recipientAccount) {
+    throw new GenericError({ status: 400, message: `Account not found for client ${clientId}`, })
+  }
+
+  if (!recipientAccount.client.active) {
+    throw new GenericError({ status: 400, message: `Recipient account is not active`, })
+  }
+
+  const result = await db.$transaction(async (tx) => {
+    const sender = await tx.account.update({
+      data: {
+        balance: {
+          decrement: amount,
+        },
+      },
+      where: {
+        id: account.id,
+      },
+    })
+
+    const recipient = await tx.account.update({
+      data: {
+        balance: {
+          increment: amount,
+        },
+      },
+      where: {
+        id: recipientAccount.id,
+      },
+    })
+
+    return { sender, recipient }
+  })
+
+  return result
+
+}
