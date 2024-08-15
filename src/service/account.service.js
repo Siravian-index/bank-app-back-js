@@ -229,7 +229,7 @@ export async function transferAccountService(clientId, recipientAccountId, amoun
 
 
     const transaction = await saveAccountTransaction({
-      db: tx,
+      tx,
       money: amount,
       type: TRANSACTION_TYPES.TRANSFER,
       ownerAccountId: sender.id,
