@@ -1,4 +1,5 @@
 
+import { TRANSACTION_TYPES } from "../constants/index.js"
 import db from "../db/Instance.js"
 import { GenericError } from "../error/GenericError.js"
 
@@ -67,7 +68,17 @@ export async function depositAccountService(clientId, amount) {
     }
   })
 
-  return updatedAccount
+  const transaction = await db.transaction.create({
+    data: {
+      money: amount,
+      type: TRANSACTION_TYPES.DEPOSIT,
+      ownerAccountId: updatedAccount.id,
+      recipientAccountId: null,
+    }
+  })
+
+
+  return { updatedAccount, transaction }
 }
 
 
@@ -112,7 +123,17 @@ export async function withdrawAccountService(clientId, amount) {
     }
   })
 
-  return updatedAccount
+  const transaction = await db.transaction.create({
+    data: {
+      money: amount,
+      type: TRANSACTION_TYPES.WITHDRAW,
+      ownerAccountId: updatedAccount.id,
+      recipientAccountId: null,
+    }
+  })
+
+
+  return { updatedAccount, transaction }
 }
 
 
@@ -195,7 +216,17 @@ export async function transferAccountService(clientId, recipientAccountId, amoun
       },
     })
 
-    return { sender, recipient }
+    const transaction = await tx.transaction.create({
+      data: {
+        money: amount,
+        type: TRANSACTION_TYPES.TRANSFER,
+        ownerAccountId: sender.id,
+        recipientAccountId: recipient.id,
+      }
+    })
+
+
+    return { sender, recipient, transaction }
   })
 
   return result
