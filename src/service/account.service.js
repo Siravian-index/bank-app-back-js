@@ -173,6 +173,10 @@ export async function transferAccountService(clientId, recipientAccountId, amoun
     throw new GenericError({ status: 400, message: `Account not found for client ${clientId}`, })
   }
 
+  if (account.id === recipientAccountId) {
+    throw new GenericError({ status: 400, message: `Cannot transfer money to your own account`, })
+  }
+
   const hasResources = account.balance >= amount
   if (!hasResources) {
     throw new GenericError({ status: 400, message: `Account does not have enough money (${account.balance}) to transfer this amount (${amount})`, })
