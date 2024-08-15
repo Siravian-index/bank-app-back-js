@@ -2,7 +2,7 @@
 import { TRANSACTION_TYPES } from "../constants/index.js"
 import db from "../db/Instance.js"
 import { GenericError } from "../error/GenericError.js"
-
+import { saveAccountTransaction } from "./transaction.service.js"
 
 export async function checkAccountService(clientId) {
   const client = await db.client.findFirst({
@@ -58,27 +58,32 @@ export async function depositAccountService(clientId, amount) {
     throw new GenericError({ status: 400, message: `Account not found for client ${clientId}`, })
   }
 
-  const newBalance = account.balance + amount
-  const updatedAccount = await db.account.update({
-    where: {
-      clientId
-    },
-    data: {
-      balance: newBalance
-    }
-  })
+  const result = await db.$transaction(async (tx) => {
 
-  const transaction = await db.transaction.create({
-    data: {
+    const updatedAccount = await tx.account.update({
+      data: {
+        balance: {
+          increment: amount,
+        },
+      },
+      where: {
+        id: account.id,
+      },
+    })
+
+    const transaction = await saveAccountTransaction({
+      tx,
       money: amount,
       type: TRANSACTION_TYPES.DEPOSIT,
       ownerAccountId: updatedAccount.id,
       recipientAccountId: null,
-    }
+    })
+
+    return { updatedAccount, transaction }
+
   })
 
-
-  return { updatedAccount, transaction }
+  return result
 }
 
 
@@ -113,27 +118,33 @@ export async function withdrawAccountService(clientId, amount) {
     throw new GenericError({ status: 400, message: `Account does not have enough money (${account.balance}) to withdraw this amount (${amount})`, })
   }
 
-  const newBalance = account.balance - amount
-  const updatedAccount = await db.account.update({
-    where: {
-      clientId
-    },
-    data: {
-      balance: newBalance
-    }
-  })
+  const result = await db.$transaction(async (tx) => {
 
-  const transaction = await db.transaction.create({
-    data: {
+    const updatedAccount = await tx.account.update({
+      data: {
+        balance: {
+          decrement: amount,
+        },
+      },
+      where: {
+        id: account.id,
+      },
+    })
+
+    const transaction = await saveAccountTransaction({
+      tx,
       money: amount,
       type: TRANSACTION_TYPES.WITHDRAW,
       ownerAccountId: updatedAccount.id,
       recipientAccountId: null,
-    }
+    })
+
+    return { updatedAccount, transaction }
+
   })
 
 
-  return { updatedAccount, transaction }
+  return result
 }
 
 
@@ -216,15 +227,14 @@ export async function transferAccountService(clientId, recipientAccountId, amoun
       },
     })
 
-    const transaction = await tx.transaction.create({
-      data: {
-        money: amount,
-        type: TRANSACTION_TYPES.TRANSFER,
-        ownerAccountId: sender.id,
-        recipientAccountId: recipient.id,
-      }
-    })
 
+    const transaction = await saveAccountTransaction({
+      db: tx,
+      money: amount,
+      type: TRANSACTION_TYPES.TRANSFER,
+      ownerAccountId: sender.id,
+      recipientAccountId: recipient.id,
+    })
 
     return { sender, recipient, transaction }
   })

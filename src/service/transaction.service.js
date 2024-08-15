@@ -1,7 +1,7 @@
 
 
-export async function saveAccountTransaction({ type, money, ownerAccountId, recipientAccountId, db }) {
-  return db.transaction.create({
+export async function saveAccountTransaction({ type, money, ownerAccountId, recipientAccountId, tx }) {
+  return tx.transaction.create({
     data: {
       money,
       type,
