@@ -12,7 +12,7 @@ export function createServer() {
   app.use(deserializeUser)
 
   app.use(cors({
-    origin: "*"
+    origin: "*",
   }))
 
   routes(app)
